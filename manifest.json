@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Subtitle Layout Helper",
+  "version": "1.0.0",
+  "description": "Locally adjusts YouTube subtitle layout to make them less obstructive.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "YouTube Subtitle Layout Helper"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+/* 
+  YouTube Subtitle Layout Helper - Custom CSS
+  We hook into standard YouTube caption classes.
+  Tested to work on .ytp-caption-window-container and .ytp-caption-segment.
+*/
+
+html.yt-sub-helper-enabled .ytp-caption-window-container {
+  /* Translate X and Y for drag-and-drop */
+  transform: translate(calc(var(--yt-sub-pos-x, 0px)), calc(var(--yt-sub-pos-y, 0px))) !important;
+  transition: var(--yt-sub-transition, transform 0.2s ease-out);
+  cursor: grab !important;
+  pointer-events: auto !important; /* Ensure user can grab it over the video */
+  user-select: none;
+}
+
+html.yt-sub-helper-enabled .ytp-caption-window-container:active {
+  cursor: grabbing;
+}
+
+html.yt-sub-helper-enabled .ytp-caption-segment {
+  /* Override font sizing rules */
+  font-size: var(--yt-sub-font-size, 100%) !important;
+  line-height: var(--yt-sub-line-height, 1.2) !important;
+  transition: all 0.2s ease-out;
+}
+
+/* 
+  Targeted background adjustment to stop text from hiding
+*/
+html.yt-sub-helper-enabled .captions-text .caption-visual-line .ytp-caption-segment {
+  background-color: rgba(8, 8, 8, var(--yt-sub-bg-opacity, 0.75)) !important;
+}
+
+/* 
+  Line Clamping Logic
+  YouTube structures captions into multiple .caption-visual-line elements.
+  We hide the ones past the user's limit using CSS nth-child rules.
+  Line limits are handled by toggling classes on the root HTML.
+*/
+html.yt-sub-helper-enabled.yt-sub-lines-1 .caption-visual-line:nth-child(n+2) {
+  display: none !important;
+}
+
+html.yt-sub-helper-enabled.yt-sub-lines-2 .caption-visual-line:nth-child(n+3) {
+  display: none !important;
+}
+
+html.yt-sub-helper-enabled.yt-sub-lines-3 .caption-visual-line:nth-child(n+4) {
+  display: none !important;
+}

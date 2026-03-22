@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YT Subtitle Helper</title>
+  <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+  <div class="header">
+    <h1>YT Subtitle Helper</h1>
+    <label class="switch">
+      <input type="checkbox" id="enabled-toggle">
+      <span class="slider round"></span>
+    </label>
+  </div>
+
+  <div class="control-group">
+    <label for="fontsize-slider">Font Size: <span id="fontsize-val">100</span>%</label>
+    <input type="range" id="fontsize-slider" min="50" max="600" step="10" value="100">
+  </div>
+  
+  <div class="control-group">
+    <label for="lineheight-slider">Line Height: <span id="lineheight-val">1.2</span></label>
+    <input type="range" id="lineheight-slider" min="1.0" max="4.0" step="0.1" value="1.2">
+  </div>
+
+  <div class="control-group">
+    <label for="opacity-slider">Background Opacity: <span id="opacity-val">75</span>%</label>
+    <input type="range" id="opacity-slider" min="0" max="100" step="5" value="75">
+  </div>
+
+  <div class="control-group">
+    <label for="maxlines-select">Maximum Lines Shown</label>
+    <select id="maxlines-select" style="width: 100%; padding: 4px; margin-top: 4px; background: #333; color: white; border: 1px solid #555;">
+      <option value="0">Unlimited</option>
+      <option value="1">1 Line</option>
+      <option value="2">2 Lines</option>
+      <option value="3">3 Lines</option>
+    </select>
+  </div>
+
+  <div class="control-group checkbox-group">
+    <label for="second-subtitle-toggle">Show 2nd Subtitle Area</label>
+    <input type="checkbox" id="second-subtitle-toggle">
+  </div>
+
+  <div class="control-group" id="second-lang-group" style="display: none;">
+    <label for="second-lang-select">Secondary Language</label>
+    <select id="second-lang-select" style="width: 100%; padding: 4px; margin-top: 4px; background: #333; color: white; border: 1px solid #555;">
+      <option value="">None (Auto/Translate config)</option>
+      <option value="en">English</option>
+      <option value="ja">Japanese</option>
+      <option value="ko">Korean</option>
+      <option value="zh-Hans">Chinese (Simplified)</option>
+      <option value="es">Spanish</option>
+    </select>
+  </div>
+
+  <div class="footer">
+    <button id="reset-btn">Reset to Defaults</button>
+  </div>
+
+  <script type="module" src="./popup.js"></script>
+</body>
+</html>

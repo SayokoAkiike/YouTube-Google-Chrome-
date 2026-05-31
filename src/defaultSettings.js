@@ -10,3 +10,5 @@ export const defaultSettings = {
   secondLanguageCode: '',
   maxLines: 0,
 };
+
+export const STORAGE_KEY = 'settings';

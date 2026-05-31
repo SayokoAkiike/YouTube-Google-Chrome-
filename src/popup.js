@@ -1,4 +1,4 @@
-import { defaultSettings } from './defaultSettings.js';
+import { defaultSettings, STORAGE_KEY } from './defaultSettings.js';
 
 // DOM Elements
 const enabledToggle = document.getElementById('enabled-toggle');
@@ -13,11 +13,12 @@ const secondLangGroup = document.getElementById('second-lang-group');
 const secondLangSelect = document.getElementById('second-lang-select');
 const maxlinesSelect = document.getElementById('maxlines-select');
 const resetBtn = document.getElementById('reset-btn');
+const saveStatus = document.getElementById('save-status');
 
 // Load settings
 function loadSettings() {
-  chrome.storage.local.get('settings', (result) => {
-    const settings = result.settings || defaultSettings;
+  chrome.storage.local.get(STORAGE_KEY, (result) => {
+    const settings = result[STORAGE_KEY] || defaultSettings;
     
     enabledToggle.checked = settings.enabled;
     
@@ -39,17 +40,28 @@ function loadSettings() {
 
 // Save settings
 function saveSettings() {
-  const settings = {
-    enabled: enabledToggle.checked,
-    fontSizePercentage: parseInt(fontsizeSlider.value, 10),
-    lineHeight: parseFloat(lineheightSlider.value),
-    backgroundOpacity: parseInt(opacitySlider.value, 10),
-    showSecondSubtitleArea: secondSubtitleToggle.checked,
-    secondLanguageCode: secondLangSelect.value,
-    maxLines: parseInt(maxlinesSelect.value, 10) || 0,
-  };
-  
-  chrome.storage.local.set({ settings });
+  chrome.storage.local.get(STORAGE_KEY, (result) => {
+    const prev = result[STORAGE_KEY] || defaultSettings;
+    const settings = {
+      ...prev,
+      enabled: enabledToggle.checked,
+      fontSizePercentage: parseInt(fontsizeSlider.value, 10),
+      lineHeight: parseFloat(lineheightSlider.value),
+      backgroundOpacity: parseInt(opacitySlider.value, 10),
+      showSecondSubtitleArea: secondSubtitleToggle.checked,
+      secondLanguageCode: secondLangSelect.value,
+      maxLines: parseInt(maxlinesSelect.value, 10) || 0,
+    };
+    
+    chrome.storage.local.set({ [STORAGE_KEY]: settings }, () => {
+      if (saveStatus) {
+        saveStatus.innerText = 'Saved!';
+        setTimeout(() => {
+          if (saveStatus) saveStatus.innerText = '';
+        }, 1000);
+      }
+    });
+  });
 }
 
 // Event Listeners
@@ -81,7 +93,7 @@ maxlinesSelect.addEventListener('change', saveSettings);
 resetBtn.addEventListener('click', () => {
   const isConfirmed = confirm('Are you sure you want to reset all settings to defaults?');
   if (isConfirmed) {
-    chrome.storage.local.set({ settings: defaultSettings }, () => {
+    chrome.storage.local.set({ [STORAGE_KEY]: defaultSettings }, () => {
       loadSettings();
     });
   }

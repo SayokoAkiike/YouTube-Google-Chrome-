@@ -1,4 +1,4 @@
-import { defaultSettings } from './defaultSettings.js';
+import { defaultSettings, STORAGE_KEY } from './defaultSettings.js';
 
 let currentSettings = { ...defaultSettings };
 
@@ -38,17 +38,17 @@ function applySettings() {
 // Initialize on page load
 // Wrap in try-catch to ensure we fail safely without breaking the user's video playback
 try {
-  chrome.storage.local.get('settings', (result) => {
-    if (result.settings) {
-      currentSettings = result.settings;
+  chrome.storage.local.get(STORAGE_KEY, (result) => {
+    if (result[STORAGE_KEY]) {
+      currentSettings = result[STORAGE_KEY];
     }
     applySettings();
   });
 
   // Listen for changes from the popup
   chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local' && changes.settings) {
-      currentSettings = changes.settings.newValue;
+    if (namespace === 'local' && changes[STORAGE_KEY]) {
+      currentSettings = changes[STORAGE_KEY].newValue;
       applySettings();
     }
   });
@@ -67,6 +67,7 @@ function setupDragObserver() {
       container.dataset.dragAttached = "true";
       attachDragListeners(container);
     }
+    setupSecondSubtitleObserver();
   });
   dragObserver.observe(document.body, { childList: true, subtree: true });
 }
@@ -108,7 +109,7 @@ function attachDragListeners(container) {
     currentSettings.subtitlePosX = initialX + dx;
     currentSettings.subtitlePosY = initialY + dy;
     
-    chrome.storage.local.set({ settings: currentSettings });
+    chrome.storage.local.set({ [STORAGE_KEY]: currentSettings });
   });
 }
 
@@ -122,6 +123,28 @@ function cleanupDragListeners() {
 let secondSubContainer = null;
 let lastCaptionText = "";
 let debounceTranslationTimer = null;
+
+function buildCaptionDOM(text, settings) {
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.className = 'ytp-caption-segment custom-second-segment';
+  span.style.cssText = `font-size: ${settings.fontSizePercentage}%; line-height: ${settings.lineHeight}; background: rgba(8, 8, 8, ${settings.backgroundOpacity / 100}); display: inline-block;`;
+  
+  const captionLine = document.createElement('span');
+  captionLine.className = 'caption-visual-line';
+  captionLine.appendChild(span);
+  
+  const captions = document.createElement('span');
+  captions.className = 'captions-text';
+  captions.appendChild(captionLine);
+  
+  const captionWindow = document.createElement('div');
+  captionWindow.className = 'caption-window';
+  captionWindow.style.cssText = 'background: rgba(0,0,0,0); width: 100%; text-align: center;';
+  captionWindow.appendChild(captions);
+  
+  return captionWindow;
+}
 
 async function translateText(sourceText, targetLangCode) {
     if (!sourceText || !targetLangCode) return "";
@@ -158,23 +181,11 @@ function updateSecondSubtitleText(originalText) {
     if (debounceTranslationTimer) clearTimeout(debounceTranslationTimer);
     
     // Show a loading/placeholder indicator instantly to avoid jumping
-    const loadingSpan = document.createElement('span');
-    loadingSpan.textContent = `[Translating to ${currentSettings.secondLanguageCode.toUpperCase()}...]`;
-    loadingSpan.className = 'ytp-caption-segment custom-second-segment';
-    loadingSpan.style.cssText = `font-size: ${currentSettings.fontSizePercentage}%; line-height: ${currentSettings.lineHeight}; background: rgba(8, 8, 8, ${currentSettings.backgroundOpacity / 100}); display: inline-block;`;
+    const loadingText = `[Translating to ${currentSettings.secondLanguageCode.toUpperCase()}...]`;
+    const loadingDOM = buildCaptionDOM(loadingText, currentSettings);
     
     secondSubContainer.innerHTML = '';
-    const captionLine = document.createElement('span');
-    captionLine.className = 'caption-visual-line';
-    captionLine.appendChild(loadingSpan);
-    const captions = document.createElement('span');
-    captions.className = 'captions-text';
-    captions.appendChild(captionLine);
-    const window = document.createElement('div');
-    window.className = 'caption-window';
-    window.style.cssText = 'background: rgba(0,0,0,0); width: 100%; text-align: center;';
-    window.appendChild(captions);
-    secondSubContainer.appendChild(window);
+    secondSubContainer.appendChild(loadingDOM);
     secondSubContainer.style.display = "block";
 
     // Rate-limit fetches to wait for caption settling (~200ms)
@@ -182,23 +193,10 @@ function updateSecondSubtitleText(originalText) {
         const translatedStr = await translateText(originalText, currentSettings.secondLanguageCode);
         
         if (secondSubContainer && lastCaptionText === originalText) {
-            const resultSpan = document.createElement('span');
-            resultSpan.textContent = translatedStr;
-            resultSpan.className = 'ytp-caption-segment custom-second-segment';
-            resultSpan.style.cssText = `font-size: ${currentSettings.fontSizePercentage}%; line-height: ${currentSettings.lineHeight}; background: rgba(8, 8, 8, ${currentSettings.backgroundOpacity / 100}); display: inline-block;`;
+            const resultDOM = buildCaptionDOM(translatedStr, currentSettings);
             
             secondSubContainer.innerHTML = '';
-            const captionLine = document.createElement('span');
-            captionLine.className = 'caption-visual-line';
-            captionLine.appendChild(resultSpan);
-            const captions = document.createElement('span');
-            captions.className = 'captions-text';
-            captions.appendChild(captionLine);
-            const window = document.createElement('div');
-            window.className = 'caption-window';
-            window.style.cssText = 'background: rgba(0,0,0,0); width: 100%; text-align: center;';
-            window.appendChild(captions);
-            secondSubContainer.appendChild(window);
+            secondSubContainer.appendChild(resultDOM);
         }
     }, 200);
 }
@@ -246,6 +244,5 @@ function setupSecondSubtitleObserver() {
   }
 }
 
-// Call this from our mutation observer loop
-setInterval(setupSecondSubtitleObserver, 300);
+
 

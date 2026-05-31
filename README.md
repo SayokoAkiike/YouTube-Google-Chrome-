@@ -1,35 +1,59 @@
 # YouTube Subtitle Layout Helper
 
-This project is a personal desktop browser extension that locally adjusts subtitle layout on YouTube pages. 
+YouTube の字幕レイアウトをブラウザ内だけで調整する Chrome 拡張機能です。
+ドラッグによる位置移動・フォントサイズ・行間・背景透明度の変更、および二言語字幕表示に対応しています。
 
-- It **does not** download, store, redistribute, or bulk collect video or subtitle content. 
-- It **does not** send subtitle or viewing data to any external servers. 
-- It **does not** include analytics, tracking, accounts, or backend APIs.
+## 特徴
 
-This is an unofficial UI helper and may stop working if YouTube changes its page structure. 
-Public code contains no API keys or secrets. Use at your own risk.
+- 字幕のフォントサイズ・行間・背景透明度を調整
+- 字幕のドラッグ移動（位置はローカルに保存）
+- 表示行数の上限を 1〜3 行に制限
+- ON/OFF の切り替え
+- 設定は Chrome Storage API でローカル保存
+- オプション：Google Translate による二言語字幕表示
 
-## Features
-- Adjust subtitle font size, line height, and background opacity.
-- Move subtitle position upward to clear up screen space.
-- Toggle the UI helper ON/OFF seamlessly.
-- Saves preferences locally using Chrome Extension storage API.
+## 技術的なポイント
 
-## Installation
-Because this extension is written in Vanilla JavaScript, no build step (like Node.js or npm) is required.
+- Manifest V3 準拠
+- CSS Custom Properties をルート要素に注入することで、JS と CSS の責務を分離
+- `MutationObserver` で YouTube の SPA ページ遷移後も字幕コンテナを追跡
+- 翻訳リクエストはデバウンス処理（200ms）でレート制限に対応
+- `defaultSettings.js` を単一の真実の源として `content.js` と `popup.js` の両方で共有
 
-1. Clone, download, or locate this repository folder on your PC.
-2. Open Chrome/Edge and navigate to the Extensions page (`chrome://extensions/` or `edge://extensions/`).
-3. Enable **Developer mode** (a toggle usually in the top right corner).
-4. Click **Load unpacked** (パッケージ化されていない拡張機能を読み込む).
-5. Select the entire `Youtube 二言語字幕_拡張機能自作` folder.
-6. The extension is now installed and active!
+## ファイル構成
 
-## Privacy & Safety
-This tool is entirely local. It asks for the bare minimum permissions (`storage`) and injects visual overrides using CSS only on the host `*://*.youtube.com/*`.
+```
+.
+├── manifest.json          # 拡張機能の定義（Manifest V3）
+└── src/
+    ├── defaultSettings.js # 設定のデフォルト値（共有モジュール）
+    ├── content.js         # YouTube ページへの DOM 操作・CSS 変数注入・ドラッグ処理
+    ├── content.css        # 字幕スタイル上書き（CSS Custom Properties 使用）
+    ├── popup.html         # 設定用ポップアップ UI
+    ├── popup.js           # ポップアップの操作・Chrome Storage 読み書き
+    └── popup.css          # ポップアップのスタイル
+```
 
-## Translation Feature Note
-The secondary subtitle translation feature uses the free Google Translate Web API endpoint. Please note:
-- Google may rate-limit or block requests if used excessively.
-- For production use with heavy translation demands, consider implementing a backend service with proper API keys.
-- The feature is disabled by default; enable in the popup settings if needed.
+## 権限
+
+`storage` のみ。音声・動画・字幕データの収集・外部サーバーへの送信は行いません。
+
+## インストール方法
+
+1. このリポジトリをクローンまたはダウンロードする
+2. Chrome で `chrome://extensions/` を開く
+3. 右上の「デベロッパーモード」を有効にする
+4. 「パッケージ化されていない拡張機能を読み込む」をクリックし、リポジトリのルートフォルダを選択する
+
+ビルド不要です。Node.js・npm は不要です。
+
+## 翻訳機能について
+
+Google Translate の非公式エンドポイントを使用しています。
+過剰なリクエストによりレート制限される場合があります。
+デフォルトで無効です。ポップアップ設定から有効にできます。
+
+## 注意事項
+
+YouTube のページ構造変更により動作しなくなる可能性があります。
+非公式ツールのため自己責任でご使用ください。
